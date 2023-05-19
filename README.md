@@ -52,7 +52,7 @@ Prerequisite:
   make install
   cd .. && rm -rf rocksdb-7.8.3 v7.8.3.zip
   ```
-  Note：Set `USE_RTTI=1` in Makefile. Otherwise, there will be link failed to rocksdb. Moreover, set `PORTABLE=1` to enhance the portability of the code. Please refer to the following link for more details. https://github.com/facebook/rocksdb/blob/master/INSTALL.md
+  Note：Set `PORTABLE=1` to enhance the portability of the code. Please refer to the following link for more details. https://github.com/facebook/rocksdb/blob/master/INSTALL.md
 	
 Compile MCP
 
