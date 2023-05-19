@@ -1,8 +1,8 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.23.2)
 
 project (mcp)
 
-set (VERSION "1.0.10")
+set (VERSION "1.0.11")
 
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
@@ -38,7 +38,7 @@ endif (WIN32)
 if (WIN32)
 	set (PLATFORM_CXX_FLAGS "/bigobj /MP /wd4086 /wd4996 /wd4503 /wd4267 /wd4180 /wd4290 /wd4297 /wd4244 /wd4800")
 else (WIN32)
-	set (PLATFORM_CXX_FLAGS "-std=c++14 ")
+	set (PLATFORM_CXX_FLAGS "-std=c++17 ")
 endif (WIN32)
 
 if (WIN32)
@@ -52,7 +52,7 @@ if (APPLE)
 elseif (WIN32)
 	set (PLATFORM_LINK_FLAGS "")
 else ()
-	set (PLATFORM_LINK_FLAGS "-static-libgcc -static-libstdc++")
+	set (PLATFORM_LINK_FLAGS "-g -static-libgcc -static-libstdc++")
 endif (APPLE)
 
 include(ProjectLibFF)
@@ -444,5 +444,3 @@ endif()
 target_link_libraries (mcp rpc wallet consensus node p2p core db common devcrypto devcore evm libminiupnpc-static secp256k1 lz4_static ${CRYPTOPP_LIBRARY} ${Boost_ATOMIC_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_LOG_SETUP_LIBRARY} ${Boost_THREAD_LIBRARY} ${PLATFORM_LIBS}  ${DEPENDENCE_LIBS})
 
 target_link_libraries (test_account rpc wallet consensus node p2p core db common devcrypto devcore evm libminiupnpc-static secp256k1 lz4_static ${CRYPTOPP_LIBRARY} ${Boost_ATOMIC_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_LOG_SETUP_LIBRARY} ${Boost_THREAD_LIBRARY} ${PLATFORM_LIBS} ${DEPENDENCE_LIBS})
-
-
