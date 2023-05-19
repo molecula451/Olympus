@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.23.2)
 
 project (mcp)
 
-set (VERSION "1.0.11")
+set (VERSION "1.0.6")
 
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
