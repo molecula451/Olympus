@@ -1330,3 +1330,64 @@ mcp::json mcp::chain::traceTransaction(Executive& _e, Transaction const& _t, mcp
 	_e.finalize();
 	return st.jsonValue();
 }
+
+template <class DB>
+AddressHash mcp::commit(mcp::db::db_transaction &transaction_a, mcp::AccountMap const &_cache, DB *db, std::shared_ptr<mcp::process_block_cache> block_cache, mcp::block_store &store, h256 const &ts)
+{
+    //mcp::stopwatch_guard sw("chain state:commit");
+
+    AddressHash ret;
+    for (auto const &i : _cache)
+    {
+        if (i.second->isDirty())
+        {
+            if (i.second->hasNewCode())
+            {
+                h256 ch = i.second->codeHash();
+                // sichaoy: why do we need CodeSizeCache?
+                // Store the size of the code
+                CodeSizeCache::instance().store(ch, i.second->code().size());
+                db->insert(ch, &i.second->code());
+            }
+
+            std::shared_ptr<mcp::account_state> state(i.second);
+            if (i.second->storageOverlay().empty())
+            {
+                assert_x(i.second->baseRoot());
+                state->setStorageRoot(i.second->baseRoot());
+            }
+            else
+            {
+                //mcp::stopwatch_guard sw("chain state:commit1");
+
+                SecureTrieDB<h256, DB> storageDB(db, i.second->baseRoot());
+                for (auto const &j : i.second->storageOverlay())
+                    if (j.second)
+                        storageDB.insert(j.first, rlp(j.second));
+                    else
+                        storageDB.remove(j.first);
+                assert_x(storageDB.root());
+                state->setStorageRoot(storageDB.root());
+            }
+
+            {
+                //mcp::stopwatch_guard sw("chain state:commit2");
+
+                // commit the account_state to DB
+                db->commit();
+
+                //// Update account_state  previous and block hash
+                state->setPrevious();
+                state->setTs(ts);
+                state->record_init_hash();
+                state->clear_temp_state();
+
+                block_cache->latest_account_state_put(transaction_a, i.first, state);
+            }
+
+            ret.insert(i.first);
+        }
+    }
+
+    return ret;
+}
