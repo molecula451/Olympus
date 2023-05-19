@@ -48,7 +48,7 @@ Prerequisite:
   wget https://github.com/facebook/rocksdb/archive/v7.8.3.zip
   unzip v7.8.3.zip
   cd rocksdb-7.8.3
-  PORTABLE=1 make -j$(nproc) USE_RTTI=1 static_lib
+  PORTABLE=1 make -j$(nproc) static_lib
   make install
   cd .. && rm -rf rocksdb-7.8.3 v7.8.3.zip
   ```
