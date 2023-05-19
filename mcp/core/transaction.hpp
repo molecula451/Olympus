@@ -157,7 +157,7 @@ namespace mcp
 
 		void sign(Secret const& _priv);			///< Sign the transaction.
 
-		void setSignature(h256 const& _r, h256 const& _s, byte _v) { m_vrs = SignatureStruct(_r, _s, _v); }
+		void setSignature(h256 const& _r, h256 const& _s, Byte _v) { m_vrs = SignatureStruct(_r, _s, _v); }
 
 		/// @returns amount of gas required for the basic payment.
 		int64_t baseGasRequired(dev::eth::EVMSchedule const& _es) const { return baseGasRequired(isCreation(), &m_data, _es); }

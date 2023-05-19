@@ -127,7 +127,7 @@ void RLPXFrameCoder::writeFrame(uint16_t _protocolType, bytesConstRef _payload, 
 {
 	RLPStream header;
 	uint32_t len = (uint32_t)_payload.size();
-	header.appendRaw(bytes({ byte((len >> 16) & 0xff), byte((len >> 8) & 0xff), byte(len & 0xff) }));
+	header.appendRaw(bytes({ Byte((len >> 16) & 0xff), Byte((len >> 8) & 0xff), Byte(len & 0xff) }));
 	header.appendList(1) << _protocolType;
 	writeFrame(header, _payload, o_bytes);
 }
@@ -136,7 +136,7 @@ void RLPXFrameCoder::writeFrame(uint16_t _protocolType, uint16_t _seqId, bytesCo
 {
 	RLPStream header;
 	uint32_t len = (uint32_t)_payload.size();
-	header.appendRaw(bytes({ byte((len >> 16) & 0xff), byte((len >> 8) & 0xff), byte(len & 0xff) }));
+	header.appendRaw(bytes({ Byte((len >> 16) & 0xff), Byte((len >> 8) & 0xff), Byte(len & 0xff) }));
 	header.appendList(2) << _protocolType << _seqId;
 	writeFrame(header, _payload, o_bytes);
 }
@@ -145,7 +145,7 @@ void RLPXFrameCoder::writeFrame(uint16_t _protocolType, uint16_t _seqId, uint32_
 {
 	RLPStream header;
 	uint32_t len = (uint32_t)_payload.size();
-	header.appendRaw(bytes({ byte((len >> 16) & 0xff), byte((len >> 8) & 0xff), byte(len & 0xff) }));
+	header.appendRaw(bytes({ Byte((len >> 16) & 0xff), Byte((len >> 8) & 0xff), Byte(len & 0xff) }));
 	header.appendList(3) << _protocolType << _seqId << _totalSize;
 	writeFrame(header, _payload, o_bytes);
 }
@@ -177,7 +177,7 @@ void RLPXFrameCoder::writeSingleFramePacket(bytesConstRef _packet, bytes& o_byte
 {
 	RLPStream header;
 	uint32_t len = (uint32_t)_packet.size();
-	header.appendRaw(bytes({ byte((len >> 16) & 0xff), byte((len >> 8) & 0xff), byte(len & 0xff) }));
+	header.appendRaw(bytes({ Byte((len >> 16) & 0xff), Byte((len >> 8) & 0xff), Byte(len & 0xff) }));
 	header.appendRaw(bytes({ 0xc2,0x80,0x80 }));
 	writeFrame(header, _packet, o_bytes);
 }

@@ -45,7 +45,7 @@ mcp::approve::approve(dev::RLP const & rlp, CheckTransaction _checkSig)
         else
             BOOST_THROW_EXCEPTION(InvalidSignature());
 
-        auto const recoveryID = byte(v - (u256(m_chainId) *2 + 35));
+        auto const recoveryID = Byte(v - (u256(m_chainId) *2 + 35));
         m_vrs = SignatureStruct{ r, s, recoveryID };
 
 		///check signature valid if broadcast

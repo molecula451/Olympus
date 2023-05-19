@@ -65,7 +65,7 @@ namespace
 		u256 v = (u256)in.v;
 		if (v >= 27 && v <= 28)
 		{
-			SignatureStruct sig(in.r, in.s, (byte)((int)v - 27));
+			SignatureStruct sig(in.r, in.s, (Byte)((int)v - 27));
 			if (sig.isValid())
 			{
 				try

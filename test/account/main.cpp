@@ -55,7 +55,7 @@ void test1()
 	secp256k1_pubkey rawPubkey;
 	if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, sec.data()))
 		return ;
-	std::array<byte, 65> serializedPubkey;
+	std::array<Byte, 65> serializedPubkey;
 	unsigned char output[32] = { 0 };
 	auto serializedPubkeySize = serializedPubkey.size();
 	secp256k1_ec_pubkey_serialize(
@@ -154,7 +154,7 @@ void test3()
 
 		std::cout << "PublicCompressed to rawPubkey:" << toHex(bytesRef(rawPubkey.data, 64)) << std::endl;
 
-		std::array<byte, 65> serializedPubkey;
+		std::array<Byte, 65> serializedPubkey;
 		auto serializedPubkeySize = serializedPubkey.size();
 		secp256k1_ec_pubkey_serialize(
 			ctx, serializedPubkey.data(), &serializedPubkeySize, &rawPubkey, SECP256K1_EC_UNCOMPRESSED);
@@ -175,7 +175,7 @@ void test3()
 		};
 		auto* ctx = s_ctx.get();
 
-		std::array<byte, 65> p;
+		std::array<Byte, 65> p;
 		p[0] = 0x04;
 		_public.ref().copyTo(bytesRef(&p[1],64));
 

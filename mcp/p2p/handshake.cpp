@@ -40,7 +40,7 @@ void mcp::p2p::hankshake::ComposeOutPacket(dev::bytes const& data)
 
 	dev::bytesRef bytes_len(&m_handshakeOutBuffer[0], mcp::p2p::handshake_header_size);
 	dev::bytesRef bytes_data(&m_handshakeOutBuffer[mcp::p2p::handshake_header_size], len);
-	dev::bytes bytelen({ byte((len >> 16) & 0xff), byte((len >> 8) & 0xff), byte(len & 0xff) });
+	dev::bytes bytelen({ Byte((len >> 16) & 0xff), Byte((len >> 8) & 0xff), Byte(len & 0xff) });
 	bytesConstRef(&bytelen).copyTo(bytes_len);
 	bytesConstRef(&data).copyTo(bytes_data);
 }

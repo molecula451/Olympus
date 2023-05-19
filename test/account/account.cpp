@@ -14,15 +14,15 @@ void test_create_account()
 	std::cout << "-------------test_create_account---------------" << std::endl;
 
 	dev::h128 kdf_salt;
-	mcp::random_pool.GenerateBlock((byte*)kdf_salt.data(), kdf_salt.size);
+	mcp::random_pool.GenerateBlock((Byte*)kdf_salt.data(), kdf_salt.size);
 	// kdf_salt = dev::h128("59555A1474D77707BC6CF1FA7DE67199");
 
 	dev::h128 iv;
-	mcp::random_pool.GenerateBlock((byte*)iv.data(), iv.size);
+	mcp::random_pool.GenerateBlock((Byte*)iv.data(), iv.size);
 	// iv = dev::h128("E9A53520669C4131592E581CA81E873C");
 
 	dev::h256 prv;
-	mcp::random_pool.GenerateBlock((byte*)prv.data(), prv.size);
+	mcp::random_pool.GenerateBlock((Byte*)prv.data(), prv.size);
 	// prv = dev::Secret("D79703A37D55FD5AFC17FA4BF98047F9C6592559ABE107D01FAD13F8CDD0CD2A");
 
 	std::string password = "12345678";

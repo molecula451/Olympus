@@ -8,7 +8,7 @@ void mcp::kdf::phs(dev::Secret & result_a, std::string const & password_a, dev::
 {
 	std::lock_guard<std::mutex> lock(mutex);
 	CryptoPP::HKDF<CryptoPP::SHA256> hkdf;
-	hkdf.DeriveKey((byte*) result_a.data(), result_a.size, (byte*) password_a.data(), password_a.length(), salt_a.data(), salt_a.size, NULL, 0);
+	hkdf.DeriveKey((Byte*) result_a.data(), result_a.size, (Byte*) password_a.data(), password_a.length(), salt_a.data(), salt_a.size, NULL, 0);
 }
 
 mcp::key_manager::key_manager(boost::filesystem::path const & application_path_a, mcp::key_store& store_a):
@@ -60,7 +60,7 @@ std::list<dev::Address> mcp::key_manager::list()
 dev::Address mcp::key_manager::create(std::string const & password_a, bool generate_work_a, bool const & is_backup_a)
 {
 	dev::Secret prv;
-	random_pool.GenerateBlock((byte*)prv.data(), prv.size);
+	random_pool.GenerateBlock((Byte*)prv.data(), prv.size);
 
 	mcp::key_content kc(gen_key_content(prv, password_a));
 	add_or_update_key(kc, is_backup_a);

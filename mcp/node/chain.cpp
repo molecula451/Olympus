@@ -10,6 +10,8 @@
 #include <mcp/core/config.hpp>
 #include <mcp/node/approve_queue.hpp>
 #include <mcp/consensus/ledger.hpp>
+#include <mcp/node/chain_state.hpp>
+#include <mcp/common/CodeSizeCache.h>
 
 #include <queue>
 

@@ -727,7 +727,7 @@ void mcp_daemon::daemon::run(boost::filesystem::path const &data_path, boost::pr
 			}
 		}
 		catch (...) {
-			mcp::random_pool.GenerateBlock((byte*)seed.data(), seed.size);
+			mcp::random_pool.GenerateBlock((Byte*)seed.data(), seed.size);
 			config.writestring2file(dev::toHex(seed.ref()), nodekey_path);
 		}
 

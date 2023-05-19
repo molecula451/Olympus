@@ -30,13 +30,13 @@ namespace mcp
 
 			h256 add_packet_and_sign(dev::Secret const & prv_a, discover_packet const & packet_a)
 			{
-				assert_x((byte)packet_a.packet_type());
+				assert_x((Byte)packet_a.packet_type());
 				//rlp: network type || packet type || packet
 				dev::bytes rlp;
 				{
 					dev::RLPStream s;
-					s.appendRaw(dev::bytes(1, (byte)mcp::mcp_network));
-					s.appendRaw(dev::bytes(1, (byte)packet_a.packet_type()));
+					s.appendRaw(dev::bytes(1, (Byte)mcp::mcp_network));
+					s.appendRaw(dev::bytes(1, (Byte)packet_a.packet_type()));
 					packet_a.stream_RLP(s);
 
 					//BOOST_LOG_TRIVIAL(info) << "send  add_packet_and_sign time" << packet_a.timestamp;
@@ -191,7 +191,7 @@ namespace mcp
 			std::unique_ptr<bi::udp::socket> socket;
 
 			bi::udp::endpoint recv_endpoint;
-			std::array<byte, max_udp_packet_size> recv_buffer;
+			std::array<Byte, max_udp_packet_size> recv_buffer;
 
 			std::deque<send_udp_datagram> send_queue;
 			std::mutex send_queue_mutex;
