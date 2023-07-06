@@ -1,21 +1,57 @@
-name: C/C++ CI
+name: C++ Build
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "master" ]
+    branches:
+      - main
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: make
-      run: make -j$(nproc)
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+      - name: Check g++ version
+        run: g++ -v
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git cmake wget unzip liblz4-dev libzstd-dev zlib1g-dev
+
+      - name: Install boost
+        run: |
+          wget https://boostorg.jfrog.io/artifactory/main/release/1.66.0/source/boost_1_66_0_rc2.tar.bz2
+          tar --bzip2 -xf boost_1_66_0_rc2.tar.bz2
+          cd boost_1_66_0
+          ./bootstrap.sh --prefix=/usr/local
+          ./b2 -j$(nproc) --with-atomic --with-chrono --with-date_time --with-filesystem --with-log --with-program_options --with-regex --with-system --with-thread link=static install
+          cd .. && rm -rf boost_1_66_0 boost_1_66_0_rc2.tar.bz2
+
+      - name: Install sodium
+        run: |
+          wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.17-stable.tar.gz
+          tar --gzip -xf libsodium-1.0.17-stable.tar.gz
+          cd libsodium-stable
+          ./configure
+          make -j$(nproc)
+          sudo make install
+          cd .. && rm -rf libsodium-stable libsodium-1.0.17-stable.tar.gz
+
+      - name: Install rocksdb
+        run: |
+          wget https://github.com/facebook/rocksdb/archive/v5.18.3.zip
+          unzip v5.18.3.zip
+          cd rocksdb-5.18.3
+          PORTABLE=1 make -j$(nproc) USE_RTTI=1 static_lib
+          sudo make install
+          cd .. && rm -rf rocksdb-5.18.3 v5.18.3.zip
+
+      - name: Compile MCP
+        run: |
+          git clone https://github.com/computecoin-network/mcp.git --recursive
+          cd mcp && mkdir -p build && cd build
+          cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../
+          make -j$(nproc)
