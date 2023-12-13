@@ -22,3 +22,6 @@
 	path = libdevcrypto
 	url = https://github.com/oort-tech/libdevcrypto.git
 	branch = zhou_truffle
+[submodule "WAVM"]
+	path = WAVM
+	url = https://github.com/SynthWave-Systems/WAVM
