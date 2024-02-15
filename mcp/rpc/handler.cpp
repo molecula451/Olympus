@@ -71,8 +71,8 @@ mcp::rpc_handler::rpc_handler(mcp::rpc &rpc_a, std::string const &body_a, std::f
 	m_ethRpcMethods["eth_accounts"] = &mcp::rpc_handler::eth_accounts;
 	m_ethRpcMethods["eth_sign"] = &mcp::rpc_handler::eth_sign;
 	m_ethRpcMethods["eth_signTransaction"] = &mcp::rpc_handler::eth_signTransaction;
-	//m_ethRpcMethods["debug_traceTransaction"] = &mcp::rpc_handler::debug_traceTransaction;
-	//m_ethRpcMethods["debug_storageRangeAt"] = &mcp::rpc_handler::debug_storageRangeAt;
+	// m_ethRpcMethods["debug_traceTransaction"] = &mcp::rpc_handler::debug_traceTransaction;
+	// m_ethRpcMethods["debug_storageRangeAt"] = &mcp::rpc_handler::debug_storageRangeAt;
 
 	m_ethRpcMethods["personal_importRawKey"] = &mcp::rpc_handler::personal_importRawKey;
 	m_ethRpcMethods["personal_listAccounts"] = &mcp::rpc_handler::personal_listAccounts;
@@ -85,7 +85,6 @@ mcp::rpc_handler::rpc_handler(mcp::rpc &rpc_a, std::string const &body_a, std::f
 
 	m_ethRpcMethods["eth_requestAccounts"] = &mcp::rpc_handler::eth_accounts;
 }
-
 
 bool mcp::rpc_handler::try_get_mc_info(dev::eth::McInfo &mc_info_a, uint64_t &block_number)
 {
@@ -121,7 +120,7 @@ bool mcp::rpc_handler::try_get_mc_info(dev::eth::McInfo &mc_info_a, uint64_t &bl
 
 void mcp::rpc_handler::account_remove(mcp::json &j_response, bool &)
 {
-	//0: account, 1: password
+	// 0: account, 1: password
 	std::string account_text = params[0];
 	if (!mcp::isAddress(account_text))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
@@ -150,11 +149,11 @@ void mcp::rpc_handler::account_import(mcp::json &j_response, bool &)
 void mcp::rpc_handler::accounts_balances(mcp::json &j_response, bool &)
 {
 	mcp::json j_balances = mcp::json::array();
-	
+
 	if (!params.is_array() || params.size() < 1)
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("Cannot wrap string value as a json-rpc type; not array type or incorrect number of arguments."));
 
-	//0: account list
+	// 0: account list
 	mcp::db::db_transaction transaction(m_store.create_transaction());
 	chain_state c_state(transaction, 0, m_store, m_chain, m_cache);
 	for (mcp::json const &j_account : params)
@@ -284,14 +283,14 @@ void mcp::rpc_handler::block_traces(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::stable_blocks(mcp::json &j_response, bool &)
 {
-	//0: index, 1: limit
+	// 0: index, 1: limit
 	uint64_t index = jsToULl(params[0], "index");
 	uint64_t limit_l = jsToULl(params[1], "limit");
-	if (limit_l > list_max_limit || !limit_l)///too big or zero.
+	if (limit_l > list_max_limit || !limit_l) /// too big or zero.
 		BOOST_THROW_EXCEPTION(RPC_Error_TooLargeSearchRange("query returned more than 100 results or limit zero."));
 
 	uint64_t last_stable_index(m_chain->last_stable_index());
-	if (index > last_stable_index)///invalid index,bigger than stable index.
+	if (index > last_stable_index) /// invalid index,bigger than stable index.
 		BOOST_THROW_EXCEPTION(RPC_Error_InvalidParams("index bigger than max block number."));
 
 	mcp::db::db_transaction transaction(m_store.create_transaction());
@@ -330,7 +329,7 @@ void mcp::rpc_handler::block_summary(mcp::json &j_response, bool &)
 	mcp::summary_hash summary;
 	if (m_cache->block_summary_get(transaction, hash, summary))
 		BOOST_THROW_EXCEPTION(RPC_Error_NoResult());
-	
+
 	json result;
 	result["summeries"] = toJS(summary);
 	auto block(m_cache->block_get(transaction, hash));
@@ -359,7 +358,7 @@ void mcp::rpc_handler::block_summary(mcp::json &j_response, bool &)
 	}
 	result["parent_summaries"] = parent_summaries_l;
 
-	///High performance overhead.
+	/// High performance overhead.
 	/*/// receiptsRoot hash
 	std::vector<bytes> receipts;
 	for (auto _h : block->links())
@@ -475,7 +474,7 @@ void mcp::rpc_handler::nodes(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::witness_list(mcp::json &j_response, bool &)
 {
-	Epoch epoch = (uint64_t)jsToULl(params[0],"epoch");
+	Epoch epoch = (uint64_t)jsToULl(params[0], "epoch");
 
 	if (epoch > m_chain->last_epoch())
 		BOOST_THROW_EXCEPTION(RPC_Error_InvalidParams("The epoch has not yet completed."));
@@ -492,58 +491,94 @@ void mcp::rpc_handler::witness_list(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::process_request()
 {
-	mcp::json j_response;
-	bool async = false;
-	mcp::json request;
-	try
-	{
-		request = mcp::json::parse(body);
-	}
-	catch (...)
-	{
-		BOOST_THROW_EXCEPTION(RPC_Http_Error_BadRequest("Unexpected token a in JSON."));
-	}
+    mcp::json j_response;
+    bool async = false;
 
-	j_response["id"] = nullptr;
-	if (request.count("id"))
-		j_response["id"] = request["id"];
-	j_response["jsonrpc"] = JsonrpcVersion;
+    try
+    {
+        mcp::json request = mcp::json::parse(body);
 
-	try
-	{		
-		LOG(m_log.debug) << "REQUEST:" << request;
-		params = request["params"];
-		if (!request.count("method"))
-			BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("The method undefined does not exist/is not available"));
-		
-		auto pointer = m_ethRpcMethods.find(request["method"]);
-		if (pointer == m_ethRpcMethods.end())
-			BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("The method undefined does not exist/is not available"));
-		
-		(this->*(pointer->second))(j_response, async);
-	}
-	catch(mcp::RPC_Error_NoResult const &e)
-	{
-		j_response["result"] = nullptr;
-	}
-	catch (mcp::RpcException const &e)
-	{
-		e.toJson(j_response);
-	}
+        if (request.is_array())
+        {
+            mcp::json response_array = mcp::json::array();
+            for (const auto& req : request)
+            {
+                static mcp::json j_response;
+                j_response["id"] = nullptr;
+                if (req.count("id"))
+                    j_response["id"] = req["id"];
+                j_response["jsonrpc"] = JsonrpcVersion;
+
+                try
+                {
+                    LOG(m_log.debug) << "REQUEST: " << req;
+                    params = req["params"];
+                    if (!req.count("method"))
+                        BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("The method undefined does not exist/is not available"));
+
+                    auto pointer = m_ethRpcMethods.find(req["method"]);
+                    if (pointer == m_ethRpcMethods.end())
+                        BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("The method undefined does not exist/is not available"));
+
+                    (this->*(pointer->second))(j_response, async);
+                }
+                catch (...)
+                {
+                    BOOST_THROW_EXCEPTION(RPC_Http_Error_BadRequest("Unexpected token JSON"));
+                }
+
+                response_array.push_back(j_response);
+            }
+            response(response_array);
+        }
+        else
+        {
+            j_response["id"] = nullptr;
+            if (request.count("id"))
+                j_response["id"] = request["id"];
+            j_response["jsonrpc"] = JsonrpcVersion;
+
+            try
+            {
+                LOG(m_log.debug) << "REQUEST: " << request;
+                params = request["params"];
+                if (!request.count("method"))
+                    BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("The method undefined does not exist/is not available"));
+
+                auto pointer = m_ethRpcMethods.find(request["method"]);
+                if (pointer == m_ethRpcMethods.end())
+                    BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("The method undefined does not exist/is not available"));
+
+                (this->*(pointer->second))(j_response, async);
+            }
+            catch (...)
+            {
+                BOOST_THROW_EXCEPTION(RPC_Http_Error_BadRequest("Unexpected token JSON"));
+            }
+            if (!async)
+            {
+                response(j_response);
+            }
+        }
+    }
+	catch (mcp::RPC_Error_NoResult const &e)
+    {
+        j_response["result"] = nullptr;
+    }
+    catch (mcp::RpcException const &e)
+    {
+        e.toJson(j_response);
+    }
 	catch (std::exception const &e)
-	{
-		toRpcExceptionEthJson(e, j_response);
-	}
-	catch (...)
-	{
-		BOOST_THROW_EXCEPTION(RPC_Http_Error_Internal_Server_Error());
-	}
-
-	if (!async)
-	{
-		response(j_response);
-	}
+    {
+        toRpcExceptionEthJson(e, j_response);
+    }
+    catch (...)
+    {
+        BOOST_THROW_EXCEPTION(RPC_Http_Error_BadRequest("Unexpected token a in JSON."));
+    }
 }
+
 
 void mcp::rpc_handler::eth_blockNumber(mcp::json &j_response, bool &)
 {
@@ -552,7 +587,7 @@ void mcp::rpc_handler::eth_blockNumber(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::eth_getTransactionCount(mcp::json &j_response, bool &)
 {
-	if(!isAddress(params[0]))
+	if (!isAddress(params[0]))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 
 	BlockNumber blockTag = LatestBlock;
@@ -640,10 +675,14 @@ void mcp::rpc_handler::eth_getBlockByNumber(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::eth_getBlockByHash(mcp::json &j_response, bool &)
 {
-	if(!mcp::isH256(params[0]))
+	if (!mcp::isH256(params[0]))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
-	mcp::block_hash block_hash = jsToHash(params[0]);
+	static mcp::block_hash block_hash = jsToHash(params[0]);
 	bool is_full = params[1].is_null() ? false : (bool)params[1];
+	bool is_hex = isHex(params[0]) ? false : (bool)params[0];
+	LOG(m_log.info) << "HEXXXXXXXXXXXXXXXXXX", is_hex;
+	LOG(m_log.info) << " BLOCK HASHHHH " << std::string("0x") + block_hash.hex();
+	LOG(m_log.info) << " BLOOOOOOOOOCK " << params[0];
 
 	mcp::db::db_transaction transaction(m_store.create_transaction());
 	auto block = m_cache->block_get(transaction, block_hash);
@@ -659,6 +698,7 @@ void mcp::rpc_handler::eth_getBlockByHash(mcp::json &j_response, bool &)
 	u256 minGasPrice = 0;
 	for (auto &th : block->links())
 	{
+		j_block["hash"] = toJS(block_hash);
 		auto t = m_cache->transaction_get(transaction, th);
 		gasUsed += t->gas();
 		minGasPrice = minGasPrice == 0 ? t->gasPrice() : std::min(minGasPrice, t->gasPrice());
@@ -673,14 +713,15 @@ void mcp::rpc_handler::eth_getBlockByHash(mcp::json &j_response, bool &)
 	j_block["minGasPrice"] = toJS(minGasPrice);
 
 	j_response["result"] = j_block;
+	LOG(m_log.info) << j_block << "\\BLOCKKK";
 }
 
 void mcp::rpc_handler::eth_sendRawTransaction(mcp::json &j_response, bool &)
 {
 	Transaction t(jsToBytes(params[0], OnFailed::Throw), CheckTransaction::None);
 
-	//LOG(m_log.info) << "m_nonce:" << t.nonce() 
-	//	<< " ,m_value:" << t.value() 
+	// LOG(m_log.info) << "m_nonce:" << t.nonce()
+	//	<< " ,m_value:" << t.value()
 	//	<< " ,m_receiveAddress:" << t.receiveAddress().hex()
 	//	<< " ,m_gasPrice:" << t.gasPrice()
 	//	<< " ,m_gas:" << t.gas()
@@ -765,11 +806,13 @@ void mcp::rpc_handler::web3_clientVersion(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::web3_sha3(mcp::json &j_response, bool &)
 {
-	try {
+	try
+	{
 		dev::bytes msg = jsToBytes(params[0], OnFailed::Throw);
 		j_response["result"] = toJS(dev::sha3(msg));
 	}
-	catch (const std::exception&) {
+	catch (const std::exception &)
+	{
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError("cannot wrap string value as a json-rpc type; the \"input\" contains invalid hex character."));
 	}
 }
@@ -786,7 +829,7 @@ void mcp::rpc_handler::eth_getCode(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::eth_getStorageAt(mcp::json &j_response, bool &)
 {
-	if(!mcp::isAddress(params[0]))
+	if (!mcp::isAddress(params[0]))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 	dev::Address account = jsToAddress(params[0]);
 	uint256_t position = jsToU256(params[1]);
@@ -798,7 +841,7 @@ void mcp::rpc_handler::eth_getStorageAt(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::eth_getTransactionByHash(mcp::json &j_response, bool &)
 {
-	if(!mcp::isH256(params[0]))
+	if (!mcp::isH256(params[0]))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 	h256 hash = jsToHash(params[0]);
 
@@ -826,7 +869,7 @@ void mcp::rpc_handler::eth_getTransactionByHash(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::eth_getTransactionByBlockHashAndIndex(mcp::json &j_response, bool &)
 {
-	if(!mcp::isH256(params[0]))
+	if (!mcp::isH256(params[0]))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 	mcp::block_hash block_hash = jsToHash(params[0]);
 	uint64_t index = jsToULl(params[1], "index");
@@ -875,7 +918,7 @@ void mcp::rpc_handler::eth_getTransactionByBlockNumberAndIndex(mcp::json &j_resp
 
 void mcp::rpc_handler::eth_getTransactionReceipt(mcp::json &j_response, bool &)
 {
-	if(!mcp::isH256(params[0]))
+	if (!mcp::isH256(params[0]))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 	h256 hash = jsToHash(params[0]);
 	auto transaction = m_store.create_transaction();
@@ -905,7 +948,7 @@ void mcp::rpc_handler::eth_getTransactionReceipt(mcp::json &j_response, bool &)
 
 void mcp::rpc_handler::eth_getBlockTransactionCountByHash(mcp::json &j_response, bool &)
 {
-	if(!mcp::isH256(params[0]))
+	if (!mcp::isH256(params[0]))
 		BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 	mcp::block_hash block_hash = jsToHash(params[0]);
 
@@ -1018,11 +1061,11 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 {
 	params = params[0];
 	std::unordered_set<dev::Address> search_address;
-	if (params.count("address"))///is_null() or empty() invalid for string of json.
+	if (params.count("address")) /// is_null() or empty() invalid for string of json.
 	{
 		if (params["address"].is_string())
 		{
-			if(!mcp::isAddress(params["address"]))
+			if (!mcp::isAddress(params["address"]))
 				BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 			dev::Address _a = jsToAddress(params["address"]);
 			if (_a != dev::ZeroAddress)
@@ -1033,7 +1076,7 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 			std::vector<std::string> address_l = params["address"];
 			for (std::string const &address_text : address_l)
 			{
-				if(!mcp::isAddress(address_text))
+				if (!mcp::isAddress(address_text))
 					BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 				dev::Address _a = jsToAddress(address_text);
 				if (_a != dev::ZeroAddress)
@@ -1053,7 +1096,7 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 		std::vector<std::string> topics_l = params["topics"];
 		for (std::string const &topic_text : topics_l)
 		{
-			if(!mcp::isH256(topic_text))
+			if (!mcp::isH256(topic_text))
 				BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
 			search_topics.insert(jsToHash(topic_text));
 		}
@@ -1062,7 +1105,7 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 	mcp::json logs_l = mcp::json::array();
 	mcp::db::db_transaction transaction(m_store.create_transaction());
 	/// If we're doing singleton block filtering, execute and return
-	if (params.count("blockhash"))///is_null() or empty() invalid for string of json.
+	if (params.count("blockhash")) /// is_null() or empty() invalid for string of json.
 	{
 		if (!mcp::isH256(params["blockhash"]))
 			BOOST_THROW_EXCEPTION(RPC_Error_JsonParseError(BadHexFormat));
@@ -1080,7 +1123,8 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 			auto td = m_cache->transaction_address_get(transaction, th);
 			if (t == nullptr || tr == nullptr || td == nullptr)
 				continue;
-			if (td->blockHash != block_hash) {///not first linked, ignore.
+			if (td->blockHash != block_hash)
+			{ /// not first linked, ignore.
 				continue;
 			}
 
@@ -1095,7 +1139,8 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 				toAddress(t->from(), t->nonce()),
 				search_address,
 				search_topics);
-			for (auto localisedLog : lt.localisedLogs()) {
+			for (auto localisedLog : lt.localisedLogs())
+			{
 				mcp::json log = toJson(localisedLog);
 				logs_l.push_back(log);
 			}
@@ -1120,8 +1165,8 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 			toBlock = m_chain->last_stable_index();
 	}
 
-	if (toBlock - fromBlock + 1 > 200)///max 200
-		BOOST_THROW_EXCEPTION(RPC_Error_TooLargeSearchRange("Query Returned More Than 200 Results"));//-32005 query returned more than 10000 results
+	if (toBlock - fromBlock + 1 > 200)																  /// max 200
+		BOOST_THROW_EXCEPTION(RPC_Error_TooLargeSearchRange("Query Returned More Than 200 Results")); //-32005 query returned more than 10000 results
 
 	for (uint64_t i(fromBlock); i <= toBlock; i++)
 	{
@@ -1141,7 +1186,8 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 			auto td = m_cache->transaction_address_get(transaction, th);
 			if (t == nullptr || tr == nullptr || td == nullptr)
 				continue;
-			if (td->blockHash != block_hash) {///not first linked, ignore.
+			if (td->blockHash != block_hash)
+			{ /// not first linked, ignore.
 				continue;
 			}
 
@@ -1156,7 +1202,8 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 				toAddress(t->from(), t->nonce()),
 				search_address,
 				search_topics);
-			for (auto localisedLog : lt.localisedLogs()) {
+			for (auto localisedLog : lt.localisedLogs())
+			{
 				mcp::json log = toJson(localisedLog);
 				logs_l.push_back(log);
 			}
@@ -1166,9 +1213,9 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 	j_response["result"] = logs_l;
 }
 
-//void mcp::rpc_handler::debug_traceTransaction(mcp::json &j_response, bool &)
+// void mcp::rpc_handler::debug_traceTransaction(mcp::json &j_response, bool &)
 //{
-//	
+//
 //	std::string hash_text = params[0];
 //	dev::h256 hash;
 //	hash = jsToHash(hash_text);
@@ -1240,9 +1287,9 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 //	{
 //		BOOST_THROW_EXCEPTION(RPC_Error_InternalError("Unknown Error"));
 //	}
-//}
+// }
 //
-//void mcp::rpc_handler::debug_storageRangeAt(mcp::json &j_response, bool &)
+// void mcp::rpc_handler::debug_storageRangeAt(mcp::json &j_response, bool &)
 //{
 //	//this should be a json object, not an array
 //	dev::Address acct(0);
@@ -1301,7 +1348,7 @@ void mcp::rpc_handler::eth_getLogs(mcp::json &j_response, bool &)
 //			<< diagnostic_information(_e);
 //		exit(1);
 //	}
-//}
+// }
 
 void mcp::rpc_handler::personal_importRawKey(mcp::json &j_response, bool &)
 {
@@ -1464,7 +1511,8 @@ void mcp::rpc_handler::epoch_approves(mcp::json &j_response, bool &)
 	for (auto hash : hashs)
 	{
 		auto approve = m_cache->approve_get(transaction, hash);
-		if (approve) {
+		if (approve)
+		{
 			mcp::json approve_l;
 			approve_l["hash"] = toJS(approve->sha3());
 			approve_l["from"] = toJS(approve->sender());
