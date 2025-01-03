@@ -8,8 +8,8 @@
 	branch = master
 [submodule "evmc"]
 	path = evmc
-	url = https://github.com/oort-tech/evmc.git
-	branch = mcp
+	url = https://github.com/ethereum/evmc.git
+	branch = master
 [submodule "libevm"]
 	path = libevm
 	url = https://github.com/oort-tech/libevm.git
